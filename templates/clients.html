@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Klanten — Tijdregistratie{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Klanten</h1>
+  <a href="{{ url_for('new_client') }}" class="btn btn-primary">+ Nieuwe klant</a>
+</div>
+
+{% if clients %}
+<table>
+  <thead>
+    <tr>
+      <th>Naam</th>
+      <th>Notities</th>
+      <th class="actions-col"></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for c in clients %}
+    <tr>
+      <td><strong>{{ c.name }}</strong></td>
+      <td class="notes-cell">{{ c.notes or "—" }}</td>
+      <td class="actions">
+        <a href="{{ url_for('edit_client', client_id=c.id) }}" class="btn btn-sm">Bewerken</a>
+        <form method="post" action="{{ url_for('delete_client', client_id=c.id) }}" class="inline-form" onsubmit="return confirm('Klant en alle bijhorende interventies verwijderen?')">
+          <button type="submit" class="btn btn-sm btn-danger">Verwijderen</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty">Nog geen klanten aangemaakt.</p>
+{% endif %}
+{% endblock %}

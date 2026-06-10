@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}{% if intervention %}Interventie bewerken{% else %}Interventie registreren{% endif %} — Tijdregistratie{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{% if intervention %}Interventie bewerken{% else %}Interventie registreren{% endif %}</h1>
+</div>
+
+<form method="post" class="form-card">
+  <div class="form-row">
+    <div class="form-group">
+      <label for="client_id">Klant <span class="required">*</span></label>
+      <select id="client_id" name="client_id" required>
+        <option value="">— Selecteer klant —</option>
+        {% for c in clients %}
+        <option value="{{ c.id }}" {% if intervention and intervention.client_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="date">Datum <span class="required">*</span></label>
+      <input type="date" id="date" name="date" value="{{ intervention.date if intervention else today }}" required>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="type">Type <span class="required">*</span></label>
+      <select id="type" name="type" required>
+        {% for t in types %}
+        <option value="{{ t }}" {% if intervention and intervention.type == t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="duration_hours">Duur (uren) <span class="required">*</span></label>
+      <input type="number" id="duration_hours" name="duration_hours"
+             value="{{ intervention.duration_hours if intervention else '1' }}"
+             step="0.25" min="0.25" max="24" required>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="title">Titel <span class="required">*</span></label>
+    <input type="text" id="title" name="title" value="{{ intervention.title if intervention else '' }}" required placeholder="Korte omschrijving">
+  </div>
+
+  <div class="form-group">
+    <label for="notes">Notities</label>
+    <textarea id="notes" name="notes" rows="5" placeholder="Extra informatie (optioneel)">{{ intervention.notes if intervention else '' }}</textarea>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Opslaan</button>
+    <a href="{{ url_for('dashboard') }}" class="btn">Annuleren</a>
+  </div>
+</form>
+{% endblock %}

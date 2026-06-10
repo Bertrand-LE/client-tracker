@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{% if client %}Klant bewerken{% else %}Nieuwe klant{% endif %} — Tijdregistratie{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{% if client %}Klant bewerken{% else %}Nieuwe klant{% endif %}</h1>
+</div>
+
+<form method="post" class="form-card">
+  <div class="form-group">
+    <label for="name">Naam <span class="required">*</span></label>
+    <input type="text" id="name" name="name" value="{{ client.name if client else '' }}" required autofocus>
+  </div>
+
+  <div class="form-group">
+    <label for="notes">Notities</label>
+    <textarea id="notes" name="notes" rows="4">{{ client.notes if client else '' }}</textarea>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Opslaan</button>
+    <a href="{{ url_for('clients') }}" class="btn">Annuleren</a>
+  </div>
+</form>
+{% endblock %}

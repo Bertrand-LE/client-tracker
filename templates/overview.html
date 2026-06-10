@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Maandoverzicht — Tijdregistratie{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Maandoverzicht</h1>
+  <a href="{{ url_for('export_csv', year=year, month=month) }}" class="btn btn-primary">&#8659; Exporteer CSV</a>
+</div>
+
+<form method="get" class="filter-form">
+  <div class="filter-row">
+    <div class="form-group">
+      <label for="month">Maand</label>
+      <select id="month" name="month">
+        {% for num, name in months %}
+        <option value="{{ num }}" {% if num == month %}selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="year">Jaar</label>
+      <input type="number" id="year" name="year" value="{{ year }}" min="2020" max="2099" style="width:90px">
+    </div>
+    <button type="submit" class="btn">Tonen</button>
+  </div>
+</form>
+
+{% set month_names = ['', 'Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'] %}
+<p class="subtitle">{{ month_names[month] }} {{ year }} &mdash; totaal <strong>{{ "%.2f"|format(total_hours) }} uur</strong></p>
+
+{% if grouped %}
+  {% for client_name, data in grouped.items() %}
+  <section class="client-section">
+    <div class="client-header">
+      <h2>{{ client_name }}</h2>
+      <span class="client-total">{{ "%.2f"|format(data.total) }} uur</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Datum</th>
+          <th>Type</th>
+          <th>Titel</th>
+          <th class="num">Uren</th>
+          <th>Notities</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in data.items %}
+        <tr>
+          <td class="date">{{ i.date }}</td>
+          <td><span class="badge">{{ i.type }}</span></td>
+          <td>{{ i.title }}</td>
+          <td class="num">{{ "%.2f"|format(i.duration_hours) }}</td>
+          <td class="notes-cell">{{ i.notes or "" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endfor %}
+{% else %}
+<p class="empty">Geen interventies gevonden voor deze periode.</p>
+{% endif %}
+{% endblock %}
