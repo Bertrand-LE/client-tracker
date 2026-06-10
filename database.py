@@ -98,16 +98,39 @@ def get_interventions_this_month():
     return rows
 
 
-def get_interventions_for_month(year, month):
+def get_interventions_for_month(year, month, client_id=None):
     period = f"{year:04d}-{month:02d}"
+    conn = get_connection()
+    if client_id:
+        rows = conn.execute("""
+            SELECT i.*, c.name AS client_name
+            FROM interventions i
+            JOIN clients c ON c.id = i.client_id
+            WHERE strftime('%Y-%m', i.date) = ?
+              AND i.client_id = ?
+            ORDER BY c.name COLLATE NOCASE, i.date
+        """, (period, client_id)).fetchall()
+    else:
+        rows = conn.execute("""
+            SELECT i.*, c.name AS client_name
+            FROM interventions i
+            JOIN clients c ON c.id = i.client_id
+            WHERE strftime('%Y-%m', i.date) = ?
+            ORDER BY c.name COLLATE NOCASE, i.date
+        """, (period,)).fetchall()
+    conn.close()
+    return rows
+
+
+def get_interventions_for_week(start_date, end_date):
     conn = get_connection()
     rows = conn.execute("""
         SELECT i.*, c.name AS client_name
         FROM interventions i
         JOIN clients c ON c.id = i.client_id
-        WHERE strftime('%Y-%m', i.date) = ?
-        ORDER BY c.name COLLATE NOCASE, i.date
-    """, (period,)).fetchall()
+        WHERE i.date BETWEEN ? AND ?
+        ORDER BY i.date DESC, i.created_at DESC
+    """, (start_date, end_date)).fetchall()
     conn.close()
     return rows
 

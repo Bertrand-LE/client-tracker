@@ -4,7 +4,7 @@
 {% block content %}
 <div class="page-header">
   <h1>Maandoverzicht</h1>
-  <a href="{{ url_for('export_csv', year=year, month=month) }}" class="btn btn-primary">&#8659; Exporteer CSV</a>
+  <a href="{{ url_for('export_csv', year=year, month=month, client_id=selected_client_id or '') }}" class="btn btn-primary">&#8659; Exporteer CSV</a>
 </div>
 
 <form method="get" class="filter-form">
@@ -21,12 +21,21 @@
       <label for="year">Jaar</label>
       <input type="number" id="year" name="year" value="{{ year }}" min="2020" max="2099" style="width:90px">
     </div>
+    <div class="form-group">
+      <label for="client_id">Klant</label>
+      <select id="client_id" name="client_id">
+        <option value="">Alle klanten</option>
+        {% for c in all_clients %}
+        <option value="{{ c.id }}" {% if selected_client_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
     <button type="submit" class="btn">Tonen</button>
   </div>
 </form>
 
 {% set month_names = ['', 'Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'] %}
-<p class="subtitle">{{ month_names[month] }} {{ year }} &mdash; totaal <strong>{{ "%.2f"|format(total_hours) }} uur</strong></p>
+<p class="subtitle">{{ month_names[month] }} {{ year }}{% if selected_client_id %} &mdash; {% for c in all_clients %}{% if c.id == selected_client_id %}{{ c.name }}{% endif %}{% endfor %}{% endif %} &mdash; totaal <strong>{{ "%.2f"|format(total_hours) }} uur</strong></p>
 
 {% if grouped %}
   {% for client_name, data in grouped.items() %}
@@ -46,7 +55,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for i in data.items %}
+        {% for i in data['items'] %}
         <tr>
           <td class="date">{{ i.date }}</td>
           <td><span class="badge">{{ i.type }}</span></td>

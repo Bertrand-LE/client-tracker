@@ -1,7 +1,7 @@
 import csv
 import io
 import webbrowser
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from threading import Timer
 
 from flask import Flask, redirect, render_template, request, Response, url_for
@@ -18,6 +18,13 @@ def _today():
 def _current_year_month():
     now = datetime.now()
     return now.year, now.month
+
+
+def _current_week_range():
+    today = date.today()
+    monday = today - timedelta(days=today.weekday())
+    sunday = monday + timedelta(days=6)
+    return monday, sunday
 
 
 # ── Dashboard ─────────────────────────────────────────────────────────────────
@@ -119,6 +126,36 @@ def delete_intervention(intervention_id):
     return redirect(url_for("dashboard"))
 
 
+# ── Week view ─────────────────────────────────────────────────────────────────
+
+_DAY_NAMES = ["Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag", "Zondag"]
+
+@app.route("/week")
+def week():
+    monday, sunday = _current_week_range()
+    interventions = db.get_interventions_for_week(monday.isoformat(), sunday.isoformat())
+
+    grouped = {}
+    for i in interventions:
+        d = i["date"]
+        if d not in grouped:
+            day_obj = date.fromisoformat(d)
+            grouped[d] = {
+                "day_name": _DAY_NAMES[day_obj.weekday()],
+                "total": 0.0,
+                "items": [],
+            }
+        grouped[d]["total"] += i["duration_hours"]
+        grouped[d]["items"].append(i)
+
+    total_hours = sum(i["duration_hours"] for i in interventions)
+    return render_template("week.html",
+                           grouped=grouped,
+                           monday=monday,
+                           sunday=sunday,
+                           total_hours=total_hours)
+
+
 # ── Monthly overview ──────────────────────────────────────────────────────────
 
 @app.route("/overview")
@@ -130,7 +167,14 @@ def overview():
     except ValueError:
         pass
 
-    interventions = db.get_interventions_for_month(year, month)
+    client_id = request.args.get("client_id", "")
+    try:
+        client_id = int(client_id) if client_id else None
+    except ValueError:
+        client_id = None
+
+    interventions = db.get_interventions_for_month(year, month, client_id)
+    all_clients = db.get_all_clients()
 
     grouped = {}
     for i in interventions:
@@ -153,7 +197,9 @@ def overview():
                            year=year,
                            month=month,
                            months=months,
-                           total_hours=total_hours)
+                           total_hours=total_hours,
+                           all_clients=all_clients,
+                           selected_client_id=client_id)
 
 
 @app.route("/overview/export")
@@ -165,7 +211,13 @@ def export_csv():
     except ValueError:
         pass
 
-    interventions = db.get_interventions_for_month(year, month)
+    client_id = request.args.get("client_id", "")
+    try:
+        client_id = int(client_id) if client_id else None
+    except ValueError:
+        client_id = None
+
+    interventions = db.get_interventions_for_month(year, month, client_id)
 
     output = io.StringIO()
     writer = csv.writer(output, delimiter=";")
@@ -186,6 +238,13 @@ def export_csv():
         mimetype="text/csv",
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
+
+
+# ── Settings ──────────────────────────────────────────────────────────────────
+
+@app.route("/settings")
+def settings():
+    return render_template("settings.html")
 
 
 # ── Startup ───────────────────────────────────────────────────────────────────

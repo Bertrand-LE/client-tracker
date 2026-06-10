@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Tijdregistratie{% endblock %}</title>
+  <script>if (localStorage.getItem('darkMode') === '1') document.documentElement.classList.add('dark');</script>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -13,8 +14,15 @@
       <li><a href="{{ url_for('dashboard') }}" {% if request.endpoint == 'dashboard' %}class="active"{% endif %}>Dashboard</a></li>
       <li><a href="{{ url_for('clients') }}" {% if request.endpoint in ('clients','new_client','edit_client') %}class="active"{% endif %}>Klanten</a></li>
       <li><a href="{{ url_for('log_intervention') }}" {% if request.endpoint in ('log_intervention','edit_intervention') %}class="active"{% endif %}>Registreren</a></li>
+      <li><a href="{{ url_for('week') }}" {% if request.endpoint == 'week' %}class="active"{% endif %}>Deze week</a></li>
       <li><a href="{{ url_for('overview') }}" {% if request.endpoint == 'overview' %}class="active"{% endif %}>Maandoverzicht</a></li>
     </ul>
+    <div class="nav-end">
+      <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()" title="Schakel donkere modus">
+        <span class="icon-sun">&#9728;</span><span class="icon-moon">&#9790;</span>
+      </button>
+      <a href="{{ url_for('settings') }}" class="nav-settings {% if request.endpoint == 'settings' %}active{% endif %}" title="Instellingen">&#9881;</a>
+    </div>
   </nav>
 
   <main>
@@ -24,5 +32,12 @@
   <footer>
     <p>Tijdregistratie &mdash; lokale versie</p>
   </footer>
+
+  <script>
+    function toggleDark() {
+      const on = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('darkMode', on ? '1' : '0');
+    }
+  </script>
 </body>
 </html>
