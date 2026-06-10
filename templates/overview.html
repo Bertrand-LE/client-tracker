@@ -49,6 +49,7 @@
         <tr>
           <th>Datum</th>
           <th>Type</th>
+          <th>Locatie</th>
           <th>Titel</th>
           <th class="num">Uren</th>
           <th>Notities</th>
@@ -59,6 +60,7 @@
         <tr>
           <td class="date">{{ i.date }}</td>
           <td><span class="badge">{{ i.type }}</span></td>
+          <td><span class="badge badge-location badge-{{ i.location | lower | replace('-', '') }}">{{ i.location }}</span></td>
           <td>{{ i.title }}</td>
           <td class="num">{{ "%.2f"|format(i.duration_hours) }}</td>
           <td class="notes-cell">{{ i.notes or "" }}</td>

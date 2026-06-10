@@ -13,8 +13,7 @@ def get_connection():
 def init_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = get_connection()
-    c = conn.cursor()
-    c.executescript("""
+    conn.executescript("""
         CREATE TABLE IF NOT EXISTS clients (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
@@ -26,12 +25,18 @@ def init_db():
             client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
             date TEXT NOT NULL,
             type TEXT NOT NULL,
+            location TEXT NOT NULL DEFAULT 'Remote',
             title TEXT NOT NULL,
             duration_hours REAL NOT NULL,
             notes TEXT,
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
     """)
+    # Migration: add location column to existing databases
+    try:
+        conn.execute("ALTER TABLE interventions ADD COLUMN location TEXT NOT NULL DEFAULT 'Remote'")
+    except sqlite3.OperationalError:
+        pass  # column already exists
     conn.commit()
     conn.close()
 
@@ -76,13 +81,16 @@ def delete_client(client_id):
 # ── Interventions ─────────────────────────────────────────────────────────────
 
 INTERVENTION_TYPES = [
-    "Ticket",
-    "Vergadering",
-    "Ter plaatse",
-    "Remote sessie",
-    "Telefoongesprek",
-    "Overig",
+    "Fix",
+    "Installation",
+    "Audit",
+    "Maintenance",
+    "Meeting",
+    "Call",
+    "Other",
 ]
+
+LOCATIONS = ["Remote", "On-site"]
 
 
 def get_interventions_this_month():
@@ -147,23 +155,23 @@ def get_intervention(intervention_id):
     return row
 
 
-def create_intervention(client_id, date, type_, title, duration_hours, notes):
+def create_intervention(client_id, date, type_, location, title, duration_hours, notes):
     conn = get_connection()
     conn.execute("""
-        INSERT INTO interventions (client_id, date, type, title, duration_hours, notes)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (client_id, date, type_, title, duration_hours, notes))
+        INSERT INTO interventions (client_id, date, type, location, title, duration_hours, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (client_id, date, type_, location, title, duration_hours, notes))
     conn.commit()
     conn.close()
 
 
-def update_intervention(intervention_id, client_id, date, type_, title, duration_hours, notes):
+def update_intervention(intervention_id, client_id, date, type_, location, title, duration_hours, notes):
     conn = get_connection()
     conn.execute("""
         UPDATE interventions
-        SET client_id = ?, date = ?, type = ?, title = ?, duration_hours = ?, notes = ?
+        SET client_id = ?, date = ?, type = ?, location = ?, title = ?, duration_hours = ?, notes = ?
         WHERE id = ?
-    """, (client_id, date, type_, title, duration_hours, notes, intervention_id))
+    """, (client_id, date, type_, location, title, duration_hours, notes, intervention_id))
     conn.commit()
     conn.close()
 

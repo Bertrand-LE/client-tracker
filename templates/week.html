@@ -24,6 +24,7 @@
         <tr>
           <th>Klant</th>
           <th>Type</th>
+          <th>Locatie</th>
           <th>Titel</th>
           <th class="num">Uren</th>
           <th class="actions-col"></th>
@@ -34,6 +35,7 @@
         <tr>
           <td>{{ i.client_name }}</td>
           <td><span class="badge">{{ i.type }}</span></td>
+          <td><span class="badge badge-location badge-{{ i.location | lower | replace('-', '') }}">{{ i.location }}</span></td>
           <td>
             {{ i.title }}
             {% if i.notes %}

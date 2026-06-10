@@ -86,15 +86,17 @@ def log_intervention():
         client_id = int(request.form["client_id"])
         date = request.form["date"]
         type_ = request.form["type"]
+        location = request.form["location"]
         title = request.form["title"].strip()
         duration_hours = float(request.form["duration_hours"])
         notes = request.form.get("notes", "").strip()
-        db.create_intervention(client_id, date, type_, title, duration_hours, notes)
+        db.create_intervention(client_id, date, type_, location, title, duration_hours, notes)
         return redirect(url_for("dashboard"))
     return render_template("intervention_form.html",
                            clients=clients,
                            intervention=None,
                            types=db.INTERVENTION_TYPES,
+                           locations=db.LOCATIONS,
                            today=_today())
 
 
@@ -108,15 +110,17 @@ def edit_intervention(intervention_id):
         client_id = int(request.form["client_id"])
         date = request.form["date"]
         type_ = request.form["type"]
+        location = request.form["location"]
         title = request.form["title"].strip()
         duration_hours = float(request.form["duration_hours"])
         notes = request.form.get("notes", "").strip()
-        db.update_intervention(intervention_id, client_id, date, type_, title, duration_hours, notes)
+        db.update_intervention(intervention_id, client_id, date, type_, location, title, duration_hours, notes)
         return redirect(url_for("dashboard"))
     return render_template("intervention_form.html",
                            clients=clients,
                            intervention=intervention,
                            types=db.INTERVENTION_TYPES,
+                           locations=db.LOCATIONS,
                            today=_today())
 
 
@@ -221,12 +225,13 @@ def export_csv():
 
     output = io.StringIO()
     writer = csv.writer(output, delimiter=";")
-    writer.writerow(["Klant", "Datum", "Type", "Titel", "Uren", "Notities"])
+    writer.writerow(["Klant", "Datum", "Type", "Locatie", "Titel", "Uren", "Notities"])
     for i in interventions:
         writer.writerow([
             i["client_name"],
             i["date"],
             i["type"],
+            i["location"],
             i["title"],
             str(i["duration_hours"]).replace(".", ","),
             i["notes"] or "",
