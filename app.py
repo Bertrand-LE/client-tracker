@@ -223,8 +223,14 @@ def export_csv():
 
     interventions = db.get_interventions_for_month(year, month, client_id)
 
+    def _flat(text):
+        """Collapse newlines so notes never break a CSV row."""
+        if not text:
+            return ""
+        return " | ".join(line.strip() for line in text.splitlines() if line.strip())
+
     output = io.StringIO()
-    writer = csv.writer(output, delimiter=";")
+    writer = csv.writer(output, delimiter=";", quoting=csv.QUOTE_ALL)
     writer.writerow(["Klant", "Datum", "Type", "Locatie", "Titel", "Uren", "Notities"])
     for i in interventions:
         writer.writerow([
@@ -234,7 +240,7 @@ def export_csv():
             i["location"],
             i["title"],
             str(i["duration_hours"]).replace(".", ","),
-            i["notes"] or "",
+            _flat(i["notes"]),
         ])
 
     filename = f"interventies_{year:04d}-{month:02d}.csv"
