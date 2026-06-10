@@ -245,7 +245,7 @@ def export_csv():
 
     filename = f"interventies_{year:04d}-{month:02d}.csv"
     return Response(
-        "﻿" + output.getvalue(),  # BOM for Excel
+        "﻿" + "sep=;\n" + output.getvalue(),  # BOM + delimiter hint for Excel
         mimetype="text/csv",
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
