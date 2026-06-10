@@ -72,11 +72,19 @@ nav {
 }
 
 .nav-brand {
-  font-weight: 700;
-  font-size: 1.05rem;
-  color: var(--text);
-  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
+
+.nav-logo {
+  height: 36px;
+  width: auto;
+  display: block;
+}
+
+html:not(.dark) .logo-wit { display: none; }
+html.dark .logo-kleur { display: none; }
 
 nav ul {
   list-style: none;

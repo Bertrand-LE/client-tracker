@@ -9,7 +9,10 @@
 </head>
 <body>
   <nav>
-    <a href="{{ url_for('dashboard') }}" class="nav-brand">Tijdregistratie</a>
+    <a href="{{ url_for('dashboard') }}" class="nav-brand">
+      <img src="{{ url_for('static', filename='DooIT_logo_kleur.png') }}" class="nav-logo logo-kleur" alt="Doo-IT Services">
+      <img src="{{ url_for('static', filename='DooIT_logo_wit.png') }}" class="nav-logo logo-wit" alt="Doo-IT Services">
+    </a>
     <ul>
       <li><a href="{{ url_for('dashboard') }}" {% if request.endpoint == 'dashboard' %}class="active"{% endif %}>Dashboard</a></li>
       <li><a href="{{ url_for('clients') }}" {% if request.endpoint in ('clients','new_client','edit_client') %}class="active"{% endif %}>Klanten</a></li>
