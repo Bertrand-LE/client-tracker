@@ -177,7 +177,9 @@ def overview():
     except ValueError:
         client_id = None
 
-    interventions = db.get_interventions_for_month(year, month, client_id)
+    selected_type = request.args.get("type_filter", "") or None
+
+    interventions = db.get_interventions_for_month(year, month, client_id, selected_type)
     all_clients = db.get_all_clients()
 
     grouped = {}
@@ -203,7 +205,9 @@ def overview():
                            months=months,
                            total_hours=total_hours,
                            all_clients=all_clients,
-                           selected_client_id=client_id)
+                           selected_client_id=client_id,
+                           all_types=db.INTERVENTION_TYPES,
+                           selected_type=selected_type)
 
 
 @app.route("/overview/export")
@@ -221,7 +225,9 @@ def export_csv():
     except ValueError:
         client_id = None
 
-    interventions = db.get_interventions_for_month(year, month, client_id)
+    selected_type = request.args.get("type_filter", "") or None
+
+    interventions = db.get_interventions_for_month(year, month, client_id, selected_type)
 
     def _flat(text):
         """Collapse newlines so notes never break a CSV row."""

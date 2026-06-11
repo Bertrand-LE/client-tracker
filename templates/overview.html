@@ -4,7 +4,7 @@
 {% block content %}
 <div class="page-header">
   <h1>Maandoverzicht</h1>
-  <a href="{{ url_for('export_csv', year=year, month=month, client_id=selected_client_id or '') }}" class="btn btn-primary">&#8659; Exporteer CSV</a>
+  <a href="{{ url_for('export_csv', year=year, month=month, client_id=selected_client_id or '', type_filter=selected_type or '') }}" class="btn btn-primary">&#8659; Exporteer CSV</a>
 </div>
 
 <form method="get" class="filter-form">
@@ -27,6 +27,15 @@
         <option value="">Alle klanten</option>
         {% for c in all_clients %}
         <option value="{{ c.id }}" {% if selected_client_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="type_filter">Type</label>
+      <select id="type_filter" name="type_filter">
+        <option value="">Alle types</option>
+        {% for t in all_types %}
+        <option value="{{ t }}" {% if selected_type == t %}selected{% endif %}>{{ t }}</option>
         {% endfor %}
       </select>
     </div>

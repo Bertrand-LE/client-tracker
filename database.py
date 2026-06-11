@@ -106,26 +106,25 @@ def get_interventions_this_month():
     return rows
 
 
-def get_interventions_for_month(year, month, client_id=None):
+def get_interventions_for_month(year, month, client_id=None, type_=None):
     period = f"{year:04d}-{month:02d}"
-    conn = get_connection()
+    conditions = ["strftime('%Y-%m', i.date) = ?"]
+    params = [period]
     if client_id:
-        rows = conn.execute("""
-            SELECT i.*, c.name AS client_name
-            FROM interventions i
-            JOIN clients c ON c.id = i.client_id
-            WHERE strftime('%Y-%m', i.date) = ?
-              AND i.client_id = ?
-            ORDER BY c.name COLLATE NOCASE, i.date
-        """, (period, client_id)).fetchall()
-    else:
-        rows = conn.execute("""
-            SELECT i.*, c.name AS client_name
-            FROM interventions i
-            JOIN clients c ON c.id = i.client_id
-            WHERE strftime('%Y-%m', i.date) = ?
-            ORDER BY c.name COLLATE NOCASE, i.date
-        """, (period,)).fetchall()
+        conditions.append("i.client_id = ?")
+        params.append(client_id)
+    if type_:
+        conditions.append("i.type = ?")
+        params.append(type_)
+    where = " AND ".join(conditions)
+    conn = get_connection()
+    rows = conn.execute(f"""
+        SELECT i.*, c.name AS client_name
+        FROM interventions i
+        JOIN clients c ON c.id = i.client_id
+        WHERE {where}
+        ORDER BY c.name COLLATE NOCASE, i.date
+    """, params).fetchall()
     conn.close()
     return rows
 
