@@ -1,14 +1,60 @@
 import csv
 import io
+import os
 import webbrowser
 from datetime import date, datetime, timedelta
 from threading import Timer
 
+from docx import Document
+from docx.oxml.ns import qn
 from flask import Flask, redirect, render_template, request, Response, url_for
 
 import database as db
 
 app = Flask(__name__)
+
+TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), "documents", "timesheet_template.docx")
+_DAY_NAMES_NL = ["Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag", "Zondag"]
+
+
+def _cell_set(cell, text):
+    """Write text into a table cell, clearing any existing runs."""
+    para = cell.paragraphs[0]
+    for child in list(para._p):
+        if child.tag in (qn("w:r"), qn("w:del"), qn("w:ins")):
+            para._p.remove(child)
+    para.add_run(text)
+
+
+def _fill_timesheet(intervention):
+    doc = Document(TEMPLATE_PATH)
+    dt = datetime.strptime(intervention["date"], "%Y-%m-%d")
+    week_num = dt.isocalendar()[1]
+    weekday = _DAY_NAMES_NL[dt.weekday()]
+
+    hours = intervention["duration_hours"]
+    hours_str = str(int(hours)) if hours == int(hours) else str(hours).replace(".", ",")
+
+    # Table 1 – client name
+    _cell_set(doc.tables[1].rows[1].cells[1], intervention["client_name"])
+
+    # Table 2 – week number, date, weekday, type as proj.ref
+    t2 = doc.tables[2].rows[0]
+    _cell_set(t2.cells[1], str(week_num))
+    _cell_set(t2.cells[3], dt.strftime("%d/%m/%Y"))
+    _cell_set(t2.cells[5], weekday)
+    _cell_set(t2.cells[7], intervention["type"])
+
+    # Table 3 – normale uren total
+    _cell_set(doc.tables[3].rows[2].cells[3], hours_str)
+
+    # Table 3 – problem description (cols 1-3 are merged into one cell)
+    desc = intervention["title"]
+    if intervention["notes"]:
+        desc += "\n" + intervention["notes"]
+    _cell_set(doc.tables[3].rows[7].cells[1], desc)
+
+    return doc
 
 
 def _today():
@@ -262,6 +308,41 @@ def export_csv():
 @app.route("/settings")
 def settings():
     return render_template("settings.html")
+
+
+# ── Timesheet ─────────────────────────────────────────────────────────────────
+
+@app.route("/timesheet")
+def timesheet():
+    intervention_id = request.args.get("id", type=int)
+    if not intervention_id:
+        return redirect(url_for("overview"))
+    intervention = db.get_intervention(intervention_id)
+    if not intervention:
+        return redirect(url_for("overview"))
+    return render_template("timesheet.html", intervention=intervention)
+
+
+@app.route("/timesheet/download", methods=["POST"])
+def timesheet_download():
+    intervention_id = int(request.form["intervention_id"])
+    intervention = db.get_intervention(intervention_id)
+    if not intervention:
+        return redirect(url_for("overview"))
+
+    doc = _fill_timesheet(intervention)
+
+    buf = io.BytesIO()
+    doc.save(buf)
+    buf.seek(0)
+
+    safe_client = intervention["client_name"].replace(" ", "_")
+    filename = f"Timesheet_{safe_client}_{intervention['date']}.docx"
+    return Response(
+        buf.read(),
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 
 
 # ── Startup ───────────────────────────────────────────────────────────────────

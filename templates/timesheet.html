@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Timesheet genereren — Tijdregistratie{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Timesheet genereren</h1>
+</div>
+
+<div class="form-card timesheet-preview">
+  <h2 class="settings-section-title">Geselecteerde interventie</h2>
+
+  <div class="ts-field-grid">
+    <div class="ts-field">
+      <span class="ts-label">Klant</span>
+      <span class="ts-value">{{ intervention.client_name }}</span>
+    </div>
+    <div class="ts-field">
+      <span class="ts-label">Datum</span>
+      <span class="ts-value">{{ intervention.date }}</span>
+    </div>
+    <div class="ts-field">
+      <span class="ts-label">Type</span>
+      <span class="ts-value"><span class="badge">{{ intervention.type }}</span></span>
+    </div>
+    <div class="ts-field">
+      <span class="ts-label">Locatie</span>
+      <span class="ts-value"><span class="badge badge-location badge-{{ intervention.location | lower | replace('-', '') }}">{{ intervention.location }}</span></span>
+    </div>
+    <div class="ts-field">
+      <span class="ts-label">Duur</span>
+      <span class="ts-value">{{ "%.2f"|format(intervention.duration_hours) }} uur</span>
+    </div>
+    <div class="ts-field ts-field-full">
+      <span class="ts-label">Titel</span>
+      <span class="ts-value">{{ intervention.title }}</span>
+    </div>
+    {% if intervention.notes %}
+    <div class="ts-field ts-field-full">
+      <span class="ts-label">Notities</span>
+      <span class="ts-value ts-notes">{{ intervention.notes }}</span>
+    </div>
+    {% endif %}
+  </div>
+
+  <hr class="ts-divider">
+
+  <p class="ts-info">De volgende velden worden ingevuld in de timesheet:<br>
+    <strong>Klant, Week N°, Datum, Weekdag, Type (Proj.ref), Normale Uren (totaal), Probleemomschrijving.</strong>
+  </p>
+
+  <div class="form-actions">
+    <form method="post" action="{{ url_for('timesheet_download') }}">
+      <input type="hidden" name="intervention_id" value="{{ intervention.id }}">
+      <button type="submit" class="btn btn-primary">&#8659; Download Timesheet (.docx)</button>
+    </form>
+    <a href="{{ url_for('overview') }}" class="btn">Annuleren</a>
+  </div>
+</div>
+{% endblock %}

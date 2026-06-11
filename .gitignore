@@ -1,4 +1,5 @@
 data/tracker.db
+documents/
 __pycache__/
 *.pyc
 *.pyo
